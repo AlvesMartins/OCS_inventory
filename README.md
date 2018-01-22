@@ -1,6 +1,8 @@
 
+OCS Inventory 2.3.3
+
 ## Requirements
-- S.O = Debian 8
+- O.S = Debian 8
 - MySQL version 4.1 or higher
 - PERL 5.6 or higher (5.8 or higher recommended)
 - Apache version 1.3.33 or higher / Apache version 2.0.X or higher
