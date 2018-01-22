@@ -132,13 +132,10 @@ perl -MCPAN -e 'reload CPAN'
 echo "Pronto para executar setup.sh"
 
 sleep 5
-
-./setup.sh
-
 echo "Mysql user e senha do root"
 echo "root"
 echo "root" 
-
+sleep 5
 
 
 
