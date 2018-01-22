@@ -1,0 +1,144 @@
+#!/bin/bash
+
+Pacotes_PhP=apache2 libmysqlclient15-dev mysql-server php5 php5-gd php5-mysql php5-curl php5-imap php5-ldap
+Pacotes_Apache=libapache-dbi-perl libnet-ip-perl libsoap-lite-perl libapache2-mod-perl2 libxml-simple-perl  libdbi-perl libdbd-mysql-perl 	
+
+
+version=$(lsb_release -a  | grep Codename)
+known_version1="Codename:	jessie"
+
+if [ "$version" = "$known_version1" ]
+	 then
+		echo "Same versions as expected"
+else
+    	echo "Different version detected than known:"
+    	echo "$version"
+    	echo "Aborted"
+    	exit 1
+fi	
+	
+echo "Instalando OCS"
+
+passroot=root
+
+apt-get install software-properties-common -y
+
+echo Atualizando repositórios.
+
+if ! apt-get update
+	then
+    		echo "Não foi possível atualizar os repositórios. Verifique seu arquivo /etc/apt/sources.list"
+    		exit 1
+fi
+
+echo "Atualização feita com sucesso"
+
+sleep 5
+	
+echo "Atualizando pacotes já instalados"]
+
+if ! apt-get dist-upgrade -y
+then
+    	echo "Não foi possível atualizar pacotes."
+    	exit 1
+fi
+
+echo "Atualização de pacotes feita com sucesso"
+
+sleep 5
+	
+soft=$(dpkg --get-selections | grep git)
+
+if ! [ -n "$soft" ]
+	then
+		if ! apt-get install git  -y
+			then
+    				echo "Não foi possível instalar os pacotes."
+    				exit 1
+		fi
+
+else echo "Pacote git ja instalado"
+
+sleep 5
+
+fi	
+	
+echo "Instalando mysql"
+	
+soft2=$(dpkg --get-selections | grep mysql-server)
+
+if ! [ -n "$soft2" ]
+	  then
+                  debconf-set-selections <<< 'mysql-server mysql-server/root_password password root'
+		  debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password root'
+                  if ! apt-get install mysql-server -y
+			then
+    				echo "Não foi possível instalar o pacote mysql"
+    				exit 1
+                  else 
+      		  	echo "Configurando Database e User"
+                        mysql -u root -p $passroot <<MYSQL_SCRIPT
+			CREATE DATABASE ocsweb character set utf8;
+			CREATE USER 'ocs'@'192.168.4.59' IDENTIFIED BY 'ocs';
+			GRANT ALL PRIVILEGES ON *.* TO 'ocs'@'192.168.4.59' WITH GRANT OPTION;
+			CREATE USER 'ocs'@'localhost' IDENTIFIED BY 'ocs';
+			GRANT ALL PRIVILEGES ON *.* TO 'ocs'@'localhost' WITH GRANT OPTION;
+			CREATE USER 'ocs'@'%' IDENTIFIED BY 'ocs';
+			GRANT ALL PRIVILEGES ON *.* TO 'ocs'@'%'  WITH GRANT OPTION;
+			flush privileges;
+			MYSQL_SCRIPT
+
+                  	sleep 5
+ 		
+		  fi
+else echo "Pacote myql ja instalado"
+
+fi
+
+sleep 5
+soft3=$(dpkg --get-selections | grep libdbd-mysql-perl)
+
+if ! [ -n "$soft3" ]
+  then
+	if ! apt install apache2 libmysqlclient15-dev php5 php5-gd php5-mysql php5-curl php5-imap php5-ldap  -y
+		then
+    			echo "Não foi possível instalar os pacotes $Pacotes_PhP"
+    			exit 1
+				
+	fi
+
+	sleep 5
+
+	echo "Instalando Apache"
+
+	if ! apt install libapache-dbi-perl libnet-ip-perl libsoap-lite-perl libapache2-mod-perl2 libxml-simple-perl  libdbi-perl libdbd-mysql-perl  -y
+		then
+	    		echo "Não foi possível instalar os pacotes $Pacotes_Apache"
+	    		exit 1
+	fi
+else echo "Pacotes ja instalado"
+
+fi
+
+echo "Instalando Perl"
+
+sleep 2
+
+perl -MCPAN -e 'install CPAN'
+perl -MCPAN -e 'install XML::Entities'
+perl -MCPAN -e 'install YAML'
+perl -MCPAN -e 'reload CPAN'
+
+echo "Pronto para executar setup.sh"
+
+sleep 5
+
+./setup.sh
+
+echo "Mysql user e senha do root"
+echo "root"
+echo "root" 
+
+
+
+
